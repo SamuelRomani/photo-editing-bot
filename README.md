@@ -7,7 +7,7 @@ gratuitas: Pillow/OpenCV para a edição clássica e modelos open source para a 
 ## Roteiro
 
 - [x] **1. Base:** estrutura do projeto, leitura/gravação de fotos, recorte nos formatos do Instagram e linha de comando
-- [ ] **2. Presets:** brilho, contraste, balanço de branco, "P&B dramático", "Frio dessaturado", vinheta, granulação e cópia de estilo a partir de uma foto de referência
+- [x] **2. Presets:** brilho, contraste, balanço de branco, "P&B dramático", "Frio dessaturado", vinheta, granulação e cópia de estilo a partir de uma foto de referência
 - [ ] **3. IA gratuita:** recorte do atleta com rembg para desfocar só o fundo; aumento de resolução com Real-ESRGAN
 - [ ] **4. Interface:** app Gradio com antes/depois e download
 
@@ -25,10 +25,30 @@ pip install -e .
 Coloque as fotos em `entrada/` e rode:
 
 ```bash
-photobot                    # recorta tudo para o feed (1080x1350) e salva em saida/
+photobot                    # preset natural, feed (1080x1350), salva em saida/
 photobot -f stories         # 1080x1920
 photobot minhas_fotos/ prontas/ -f quadrado
+
+photobot -p pb_dramatico                     # P&B de alto contraste
+photobot -p nenhum -r referencias/foto.jpg   # copia cor e tom de uma foto de referência
+photobot -p frio_dessaturado -r referencias/foto.jpg --forca-referencia 0.5
 ```
+
+A ordem do processamento é: recorte no formato, cópia de estilo (se houver `-r`) e preset.
+
+Presets:
+
+| Preset             | Visual                                                                 |
+|--------------------|------------------------------------------------------------------------|
+| `natural`          | Correção limpa: balanço de branco, níveis, contraste e nitidez (padrão) |
+| `pb_dramatico`     | Preto e branco com pretos profundos, textura forte, vinheta e granulação |
+| `frio_dessaturado` | Cores apagadas, sombras azul-petróleo, contraste cinematográfico        |
+| `nenhum`           | Só recorta                                                             |
+
+Os ajustes individuais (brilho, contraste, saturação, balanço de branco, temperatura,
+níveis, nitidez, claridade, curva S, vinheta, granulação) ficam em
+`src/photobot/ajustes.py` e podem ser combinados para criar novos presets em
+`src/photobot/presets.py`.
 
 Formatos disponíveis:
 
