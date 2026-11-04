@@ -9,7 +9,7 @@ gratuitas: Pillow/OpenCV para a edição clássica e modelos open source para a 
 - [x] **1. Base:** estrutura do projeto, leitura/gravação de fotos, recorte nos formatos do Instagram e linha de comando
 - [x] **2. Presets:** brilho, contraste, balanço de branco, "P&B dramático", "Frio dessaturado", vinheta, granulação e cópia de estilo a partir de uma foto de referência
 - [x] **3. IA gratuita:** recorte do atleta com rembg para desfocar/escurecer só o fundo; aumento de resolução com redes do OpenCV (FSRCNN, ESPCN, EDSR)
-- [ ] **4. Interface:** app Gradio com antes/depois e download
+- [x] **4. Interface:** app Gradio com antes/depois, edição em lote e download
 
 ## Instalação
 
@@ -21,6 +21,10 @@ pip install -e .
 ```
 
 ## Uso
+
+Há dois jeitos: a interface web (mais fácil, veja abaixo) e a linha de comando.
+
+### Linha de comando
 
 Coloque as fotos em `entrada/` e rode:
 
@@ -58,6 +62,19 @@ Formatos disponíveis:
 | `quadrado` | 1080x1080   | 1:1                         |
 | `paisagem` | 1080x566    | 1.91:1                      |
 | `stories`  | 1080x1920   | Stories e Reels             |
+
+## Interface web
+
+```bash
+pip install -r requirements-app.txt
+photobot-app
+```
+
+Abra http://127.0.0.1:7860 no navegador. Na aba **Uma foto** você envia a foto,
+escolhe estilo, formato, fundo e ajustes finos, compara antes/depois arrastando o
+divisor e baixa o JPG. Na aba **Várias fotos** edita um lote inteiro com as mesmas
+configurações e baixa tudo num `.zip`. As opções de fundo e super-resolução precisam
+das dependências de IA abaixo.
 
 ## IA (opcional, gratuita e local)
 
