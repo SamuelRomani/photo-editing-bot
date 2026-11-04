@@ -9,6 +9,9 @@ description = "Edição automática de fotos para Instagram"
 requires-python = ">=3.10"
 dependencies = ["pillow>=10.0", "numpy>=1.26", "opencv-python-headless>=4.9"]
 
+[project.optional-dependencies]
+ia = ["rembg>=2.0.50", "onnxruntime>=1.17", "opencv-contrib-python-headless>=4.9"]
+
 [project.scripts]
 photobot = "photobot.cli:main"
 
@@ -17,3 +20,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+markers = ["rede: baixa modelos da internet na primeira execução"]
