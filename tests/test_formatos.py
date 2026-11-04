@@ -25,7 +25,7 @@ def test_processar_pasta(tmp_path):
     Image.new("RGB", (1500, 2000), "blue").save(entrada / "b.jpg")
     (entrada / "nota.txt").write_text("ignorar")
 
-    gerados = processar_pasta(entrada, saida, "feed")
+    gerados = processar_pasta(entrada, saida, "feed", "nenhum")
 
-    assert [g.name for g in gerados] == ["a_feed.jpg", "b_feed.jpg"]
+    assert [g.name for g in gerados] == ["a_nenhum_feed.jpg", "b_nenhum_feed.jpg"]
     assert all(carregar(g).size == (1080, 1350) for g in gerados)
