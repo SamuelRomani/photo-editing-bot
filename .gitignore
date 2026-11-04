@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+.gradio/
+
+# Fotos locais (não versionar)
+entrada/*
+saida/*
+referencias/*
+!entrada/.gitkeep
+!saida/.gitkeep
+!referencias/.gitkeep
