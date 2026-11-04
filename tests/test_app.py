@@ -50,3 +50,10 @@ def test_editar_lote_com_psd(tmp_path):
     galeria, zip_path = editar_lote([str(p)], *OPCOES, True, "Nenhum", progress=lambda *a, **k: None)
     assert len(galeria) == 1
     assert sorted(zipfile.ZipFile(zip_path).namelist()) == ["f_editada.jpg", "f_editada.psd"]
+
+
+def test_previa_sem_compressao():
+    """A prévia antes/depois não pode virar WebP (padrão do Gradio), que borra a granulação."""
+    app = criar_app()
+    sliders = [b for b in app.blocks.values() if isinstance(b, gr.ImageSlider)]
+    assert sliders and all(s.format == "png" for s in sliders)
