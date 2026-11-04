@@ -1,0 +1,3 @@
+# Interface web (Gradio)
+-r requirements.txt
+gradio>=5.0

@@ -10,10 +10,12 @@ requires-python = ">=3.10"
 dependencies = ["pillow>=10.0", "numpy>=1.26", "opencv-python-headless>=4.9"]
 
 [project.optional-dependencies]
+app = ["gradio>=5.0"]
 ia = ["rembg>=2.0.50", "onnxruntime>=1.17", "opencv-contrib-python-headless>=4.9"]
 
 [project.scripts]
 photobot = "photobot.cli:main"
+photobot-app = "photobot.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
