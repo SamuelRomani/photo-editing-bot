@@ -164,7 +164,7 @@ def criar_app() -> gr.Blocks:
                 with gr.Tab("Uma foto"):
                     with gr.Row():
                         entrada = gr.Image(type="pil", label="Foto original", height=420)
-                        comparacao = gr.ImageSlider(label="Antes / depois (arraste)", height=420)
+                        comparacao = gr.ImageSlider(label="Antes / depois (arraste)", height=420, format="png")
                     botao = gr.Button("Editar", variant="primary")
                     download = gr.File(label="Baixar JPG em alta qualidade")
                     download_psd = gr.File(label="Baixar PSD em camadas")
@@ -172,7 +172,7 @@ def criar_app() -> gr.Blocks:
                 with gr.Tab("Várias fotos"):
                     arquivos = gr.File(file_count="multiple", file_types=["image"], type="filepath", label="Fotos")
                     botao_lote = gr.Button("Editar todas", variant="primary")
-                    galeria = gr.Gallery(label="Resultado", columns=3, height=420)
+                    galeria = gr.Gallery(label="Resultado", columns=3, height=420, format="png")
                     zip_out = gr.File(label="Baixar todas (.zip)")
                     botao_lote.click(editar_lote, [arquivos, *opcoes], [galeria, zip_out])
     return app
