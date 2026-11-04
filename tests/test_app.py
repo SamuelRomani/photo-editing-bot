@@ -16,9 +16,16 @@ def test_criar_app():
 
 def test_editar_uma():
     img = Image.new("RGB", (1200, 900), (180, 120, 90))
-    (antes, depois), arquivo = editar_uma(img, *OPCOES)
+    (antes, depois), arquivo, psd = editar_uma(img, *OPCOES)
     assert depois.size == (1080, 1080) and antes.size == depois.size
     assert Image.open(arquivo).size == (1080, 1080)
+    assert psd is None
+
+
+def test_editar_uma_com_psd():
+    img = Image.new("RGB", (1200, 900), (180, 120, 90))
+    _, arquivo, psd = editar_uma(img, *OPCOES, True, "Nenhum")
+    assert psd.endswith(".psd") and open(psd, "rb").read(4) == b"8BPS"
 
 
 def test_editar_uma_sem_foto():
@@ -35,3 +42,11 @@ def test_editar_lote(tmp_path):
     galeria, zip_path = editar_lote(caminhos, *OPCOES, progress=lambda *a, **k: None)
     assert len(galeria) == 2
     assert sorted(zipfile.ZipFile(zip_path).namelist()) == ["f0_editada.jpg", "f1_editada.jpg"]
+
+
+def test_editar_lote_com_psd(tmp_path):
+    p = tmp_path / "f.png"
+    Image.new("RGB", (800, 1000), (40, 90, 120)).save(p)
+    galeria, zip_path = editar_lote([str(p)], *OPCOES, True, "Nenhum", progress=lambda *a, **k: None)
+    assert len(galeria) == 1
+    assert sorted(zipfile.ZipFile(zip_path).namelist()) == ["f_editada.jpg", "f_editada.psd"]

@@ -1,0 +1,4 @@
+[
+  {"command": "filter.sharpen.smartSharpen", "params": {"amount": 80}},
+  {"command": "layer.newAdjustmentLayer.curves", "params": {"points": [[0, 0], [64, 48], [192, 212], [255, 255]]}}
+]
