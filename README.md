@@ -8,7 +8,7 @@ gratuitas: Pillow/OpenCV para a edição clássica e modelos open source para a 
 
 - [x] **1. Base:** estrutura do projeto, leitura/gravação de fotos, recorte nos formatos do Instagram e linha de comando
 - [x] **2. Presets:** brilho, contraste, balanço de branco, "P&B dramático", "Frio dessaturado", vinheta, granulação e cópia de estilo a partir de uma foto de referência
-- [ ] **3. IA gratuita:** recorte do atleta com rembg para desfocar só o fundo; aumento de resolução com Real-ESRGAN
+- [x] **3. IA gratuita:** recorte do atleta com rembg para desfocar/escurecer só o fundo; aumento de resolução com redes do OpenCV (FSRCNN, ESPCN, EDSR)
 - [ ] **4. Interface:** app Gradio com antes/depois e download
 
 ## Instalação
@@ -58,6 +58,31 @@ Formatos disponíveis:
 | `quadrado` | 1080x1080   | 1:1                         |
 | `paisagem` | 1080x566    | 1.91:1                      |
 | `stories`  | 1080x1920   | Stories e Reels             |
+
+## IA (opcional, gratuita e local)
+
+Instale as dependências extras (o `opencv-contrib` substitui o OpenCV comum):
+
+```bash
+pip uninstall -y opencv-python-headless opencv-python
+pip install -r requirements-ia.txt
+```
+
+```bash
+photobot --desfocar-fundo 0.6                          # fundo desfocado, atleta nítido
+photobot -p pb_dramatico --desfocar-fundo 0.6 --escurecer-fundo 0.4
+photobot --super-resolucao fsrcnn                      # amplia fotos menores que 1080 px
+photobot --super-resolucao edsr                        # melhor qualidade, bem mais lento
+```
+
+- **Fundo:** o rembg (modelo U²-Net treinado em pessoas) recorta o atleta; o fundo é
+  desfocado sem "vazar" a pessoa, então não aparece halo no contorno.
+- **Super-resolução:** só é aplicada quando a foto é menor que o formato escolhido.
+  `fsrcnn` e `espcn` são rápidos; `edsr` é o de melhor qualidade.
+
+Na primeira vez os modelos são baixados (cerca de 180 MB do rembg em `~/.u2net` ou
+`~/.rembg`, e de 40 KB a 40 MB de super-resolução em `~/.cache/photobot`). Depois
+tudo roda offline.
 
 ## Pastas
 

@@ -1,0 +1,8 @@
+# Recursos de IA locais e gratuitos (recorte do atleta e aumento de resolução).
+# O opencv-contrib substitui o opencv comum: desinstale o outro antes.
+#   pip uninstall -y opencv-python-headless opencv-python
+#   pip install -r requirements-ia.txt
+-r requirements.txt
+rembg>=2.0.50
+onnxruntime>=1.17
+opencv-contrib-python-headless>=4.9
