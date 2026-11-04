@@ -10,6 +10,7 @@ gratuitas: Pillow/OpenCV para a edição clássica e modelos open source para a 
 - [x] **2. Presets:** brilho, contraste, balanço de branco, "P&B dramático", "Frio dessaturado", vinheta, granulação e cópia de estilo a partir de uma foto de referência
 - [x] **3. IA gratuita:** recorte do atleta com rembg para desfocar/escurecer só o fundo; aumento de resolução com redes do OpenCV (FSRCNN, ESPCN, EDSR)
 - [x] **4. Interface:** app Gradio com antes/depois, edição em lote e download
+- [x] **5. PhotoCraft (opcional):** PSD em camadas para finalizar à mão e acabamentos aplicados pelo `photocraft-cli`
 
 ## Instalação
 
@@ -100,6 +101,53 @@ photobot --super-resolucao edsr                        # melhor qualidade, bem m
 Na primeira vez os modelos são baixados (cerca de 180 MB do rembg em `~/.u2net` ou
 `~/.rembg`, e de 40 KB a 40 MB de super-resolução em `~/.cache/photobot`). Depois
 tudo roda offline.
+
+## PhotoCraft (opcional)
+
+O [PhotoCraft](https://github.com/storytold/photocraft) é um editor open source no
+estilo Photoshop (licença MIT/Apache-2.0, grátis, roda offline). O bot conversa com ele
+de dois jeitos, e nenhum é obrigatório:
+
+**1. PSD em camadas** (não precisa do PhotoCraft instalado para gerar):
+
+```bash
+photobot -p pb_dramatico --desfocar-fundo 0.6 --psd
+```
+
+Além do JPG, sai um `.psd` com as camadas **Original** (só recortada), **Editada** e,
+se as dependências de IA estiverem instaladas, **Atleta recortado** (oculta, com o
+fundo transparente). Abra no PhotoCraft, Photoshop, GIMP, Krita ou Photopea para
+refinar à mão. Na interface web, marque "Gerar também PSD em camadas".
+
+**2. Acabamento pelo PhotoCraft** (precisa do PhotoCraft instalado):
+
+Instale pelo [site do PhotoCraft](https://getartcraft.com/apps/photocraft) e deixe o
+`photocraft-cli` no PATH, ou aponte a variável `PHOTOCRAFT_CLI` para ele (no Linux pode
+ser o próprio AppImage). Depois:
+
+```bash
+photobot --listar-acabamentos                       # mostra se achou o PhotoCraft
+photobot -p pb_dramatico --acabamento-photocraft nitidez_e_contraste
+photobot --acabamento-photocraft minhas_acoes.json  # suas próprias ações
+```
+
+O acabamento roda por último, por cima da edição do bot. Os que já vêm prontos
+(`nitidez`, `curva_contraste`, `nitidez_e_contraste`) estão em
+`src/photobot/acabamentos/`. Para criar outros, salve um `.json` com a lista de
+comandos do PhotoCraft em `~/.config/photobot/acabamentos/`:
+
+```json
+[
+  {"command": "filter.sharpen.smartSharpen", "params": {"amount": 80}},
+  {"command": "layer.newAdjustmentLayer.curves", "params": {"points": [[0, 0], [64, 48], [192, 212], [255, 255]]}}
+]
+```
+
+`photocraft-cli commands` lista todos os comandos. Na interface web o acabamento
+aparece em "PhotoCraft (opcional)" quando o PhotoCraft é encontrado.
+
+> O PhotoCraft ainda está em versão alfa. Se um acabamento falhar, o bot mostra o erro
+> do PhotoCraft e você pode continuar usando o resto normalmente.
 
 ## Pastas
 

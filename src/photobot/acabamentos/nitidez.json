@@ -1,0 +1,3 @@
+[
+  {"command": "filter.sharpen.smartSharpen", "params": {"amount": 80}}
+]

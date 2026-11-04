@@ -1,2 +1,3 @@
 -r requirements.txt
 pytest>=8.0
+psd-tools>=1.9

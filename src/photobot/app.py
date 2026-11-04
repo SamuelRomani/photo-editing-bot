@@ -13,7 +13,8 @@ import gradio as gr
 from PIL import Image
 
 from . import ajustes as a
-from .cli import editar
+from . import photocraft
+from .cli import Resultado, editar_camadas, salvar_camadas
 from .formatos import FORMATOS, ajustar_formato
 from .io import carregar, salvar
 from .presets import PRESETS
@@ -31,6 +32,7 @@ NOMES_FORMATO = {
     "Stories / Reels (1080x1920)": "stories",
 }
 NOMES_SR = {"Desligada": None, "Rápida (FSRCNN)": "fsrcnn", "Qualidade (EDSR, lenta)": "edsr"}
+SEM_ACABAMENTO = "Nenhum"
 
 assert set(NOMES_PRESET.values()) <= set(PRESETS) and set(NOMES_FORMATO.values()) <= set(FORMATOS)
 
@@ -48,8 +50,10 @@ def _processar(
     contraste: float,
     saturacao: float,
     temperatura: float,
-) -> Image.Image:
-    out = editar(
+    gerar_psd: bool = False,
+    acabamento: str = SEM_ACABAMENTO,
+) -> Resultado:
+    res = editar_camadas(
         img.convert("RGB"),
         NOMES_FORMATO[formato],
         NOMES_PRESET[preset],
@@ -58,7 +62,9 @@ def _processar(
         desfoque_fundo=desfoque,
         escurecer_fundo=escurecer,
         super_resolucao=NOMES_SR[super_res],
+        calcular_mascara=gerar_psd,
     )
+    out = res.editada
     # Ajustes finos por último, por cima do preset
     if brilho:
         out = a.brilho(out, brilho / 100)
@@ -68,16 +74,35 @@ def _processar(
         out = a.saturacao(out, 1 + saturacao / 100)
     if temperatura:
         out = a.temperatura(out, temperatura / 300)
-    return out
+    if acabamento and acabamento != SEM_ACABAMENTO:
+        try:
+            out = photocraft.aplicar_acabamento(out, acabamento)
+        except (photocraft.PhotoCraftIndisponivel, RuntimeError, ValueError) as e:
+            raise gr.Error(str(e)) from e
+    res.editada = out
+    return res
+
+
+def _salvar(res: Resultado, caminho: Path, gerar_psd: bool) -> list[Path]:
+    arquivos = [salvar(res.editada, caminho)]
+    if gerar_psd:
+        arquivos.append(salvar_camadas(res, caminho))
+    return arquivos
+
+
+def _quer_psd(opcoes) -> bool:
+    """A caixa "Gerar PSD" é a 12ª opção (veja a lista `opcoes` em criar_app)."""
+    return len(opcoes) > 11 and bool(opcoes[11])
 
 
 def editar_uma(img, *opcoes):
     if img is None:
         raise gr.Error("Envie uma foto primeiro.")
-    out = _processar(img, *opcoes)
+    res = _processar(img, *opcoes)
     antes = ajustar_formato(img.convert("RGB"), NOMES_FORMATO[opcoes[1]])  # mesmo recorte, sem edição
-    arquivo = salvar(out, Path(tempfile.mkdtemp()) / "photobot")
-    return (antes, out), str(arquivo)
+    arquivos = _salvar(res, Path(tempfile.mkdtemp()) / "photobot", _quer_psd(opcoes))
+    psd = str(arquivos[1]) if len(arquivos) > 1 else None
+    return (antes, res.editada), str(arquivos[0]), psd
 
 
 def editar_lote(arquivos, *opcoes, progress=gr.Progress()):
@@ -88,13 +113,13 @@ def editar_lote(arquivos, *opcoes, progress=gr.Progress()):
     for i, caminho in enumerate(arquivos):
         progress(i / len(arquivos), desc=f"Editando {i + 1} de {len(arquivos)}")
         caminho = Path(caminho)
-        out = _processar(carregar(caminho), *opcoes)
-        gerados.append(salvar(out, pasta / f"{caminho.stem}_editada"))
+        res = _processar(carregar(caminho), *opcoes)
+        gerados.extend(_salvar(res, pasta / f"{caminho.stem}_editada", _quer_psd(opcoes)))
     zip_path = pasta / "fotos_editadas.zip"
     with zipfile.ZipFile(zip_path, "w") as z:
         for g in gerados:
             z.write(g, g.name)
-    return [str(g) for g in gerados], str(zip_path)
+    return [str(g) for g in gerados if g.suffix == ".jpg"], str(zip_path)
 
 
 def criar_app() -> gr.Blocks:
@@ -117,9 +142,23 @@ def criar_app() -> gr.Blocks:
                     saturacao = gr.Slider(-100, 50, 0, step=1, label="Saturação")
                     temperatura = gr.Slider(-30, 30, 0, step=1, label="Temperatura (frio ↔ quente)")
                 super_res = gr.Radio(list(NOMES_SR), value="Desligada", label="Super-resolução para fotos pequenas (IA)")
+                with gr.Accordion("PhotoCraft (opcional)", open=False):
+                    gerar_psd = gr.Checkbox(
+                        False,
+                        label="Gerar também PSD em camadas",
+                        info="Original, editada e atleta recortado. Abre no PhotoCraft, Photoshop, GIMP ou Photopea.",
+                    )
+                    tem_pc = photocraft.disponivel()
+                    acabamento = gr.Dropdown(
+                        [SEM_ACABAMENTO, *photocraft.acabamentos()] if tem_pc else [SEM_ACABAMENTO],
+                        value=SEM_ACABAMENTO,
+                        label="Acabamento do PhotoCraft",
+                        info=None if tem_pc else "PhotoCraft não encontrado: instale o photocraft-cli para usar.",
+                        interactive=tem_pc,
+                    )
 
             opcoes = [preset, formato, referencia, forca_ref, desfoque, escurecer, super_res,
-                      brilho, contraste, saturacao, temperatura]
+                      brilho, contraste, saturacao, temperatura, gerar_psd, acabamento]
 
             with gr.Column(scale=2):
                 with gr.Tab("Uma foto"):
@@ -128,7 +167,8 @@ def criar_app() -> gr.Blocks:
                         comparacao = gr.ImageSlider(label="Antes / depois (arraste)", height=420)
                     botao = gr.Button("Editar", variant="primary")
                     download = gr.File(label="Baixar JPG em alta qualidade")
-                    botao.click(editar_uma, [entrada, *opcoes], [comparacao, download])
+                    download_psd = gr.File(label="Baixar PSD em camadas")
+                    botao.click(editar_uma, [entrada, *opcoes], [comparacao, download, download_psd])
                 with gr.Tab("Várias fotos"):
                     arquivos = gr.File(file_count="multiple", file_types=["image"], type="filepath", label="Fotos")
                     botao_lote = gr.Button("Editar todas", variant="primary")
